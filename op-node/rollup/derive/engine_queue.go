@@ -177,6 +177,8 @@ func (eq *EngineQueue) Finalize(l1Origin eth.L1BlockRef) {
 		eq.log.Error("ignoring old L1 finalized block signal! Is the L1 provider corrupted?", "prev_finalized_l1", eq.finalizedL1, "signaled_finalized_l1", l1Origin)
 		return
 	}
+	eq.tryFinalizeL2()
+	/*
 	// Perform a safety check: the L1 finalization signal is only accepted if we previously processed the L1 block.
 	// This prevents a corrupt L1 provider from tricking us in recognizing a L1 block inconsistent with the L1 chain we are on.
 	// Missing a finality signal due to empty buffer is fine, it will finalize when the buffer is filled again.
@@ -188,6 +190,7 @@ func (eq *EngineQueue) Finalize(l1Origin eth.L1BlockRef) {
 		}
 	}
 	eq.log.Warn("ignoring finalization signal for unknown L1 block, waiting for new L1 blocks in buffer", "prev_finalized_l1", eq.finalizedL1, "signaled_finalized_l1", l1Origin)
+	*/
 }
 
 // FinalizedL1 identifies the L1 chain (incl.) that included and/or produced all the finalized L2 blocks.
@@ -283,6 +286,8 @@ func (eq *EngineQueue) tryFinalizeL2() {
 	if eq.finalizedL1 == (eth.L1BlockRef{}) {
 		return // if no L1 information is finalized yet, then skip this
 	}
+	eq.finalized = eq.safeHead
+	/*
 	// default to keep the same finalized block
 	finalizedL2 := eq.finalized
 	// go through the latest inclusion data, and find the last L2 block that was derived from a finalized L1 block
@@ -293,12 +298,14 @@ func (eq *EngineQueue) tryFinalizeL2() {
 		}
 	}
 	eq.finalized = finalizedL2
-	eq.metrics.RecordL2Ref("l2_finalized", finalizedL2)
+	*/
+	eq.metrics.RecordL2Ref("l2_finalized", eq.finalized)
 }
 
 // postProcessSafeL2 buffers the L1 block the safe head was fully derived from,
 // to finalize it once the L1 block, or later, finalizes.
 func (eq *EngineQueue) postProcessSafeL2() {
+	/* Skip this for zion
 	// prune finality data if necessary
 	if len(eq.finalityData) >= finalityLookback {
 		eq.finalityData = append(eq.finalityData[:0], eq.finalityData[1:finalityLookback]...)
@@ -320,6 +327,7 @@ func (eq *EngineQueue) postProcessSafeL2() {
 			eq.log.Debug("updated finality-data", "last_l1", last.L1Block, "last_l2", last.L2Block)
 		}
 	}
+	*/
 }
 
 func (eq *EngineQueue) logSyncProgress(reason string) {
@@ -469,6 +477,7 @@ func (eq *EngineQueue) consolidateNextSafeAttributes(ctx context.Context) error 
 		return NewResetError(fmt.Errorf("failed to decode L2 block ref from payload: %w", err))
 	}
 	eq.safeHead = ref
+	eq.finalized = ref
 	eq.needForkchoiceUpdate = true
 	eq.metrics.RecordL2Ref("l2_safe", ref)
 	// unsafe head stays the same, we did not reorg the chain.

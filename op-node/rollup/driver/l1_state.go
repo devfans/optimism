@@ -46,9 +46,12 @@ func (s *L1State) HandleNewL1HeadBlock(head eth.L1BlockRef) {
 		// New L1 block is not the same as the current head or a single step linear extension.
 		// This could either be a long L1 extension, or a reorg, or we simply missed a head update.
 		s.log.Warn("L1 head signal indicates a possible L1 re-org", "old_l1_head", s.l1Head, "new_l1_head_parent", head.ParentHash, "new_l1_head", head)
+		return // We just drop it here for zion
 	}
 	s.metrics.RecordL1Ref("l1_head", head)
 	s.l1Head = head
+	s.l1Safe = head
+	s.l1Finalized = head
 }
 
 func (s *L1State) HandleNewL1SafeBlock(safe eth.L1BlockRef) {
