@@ -579,6 +579,7 @@ func (eq *EngineQueue) ConfirmPayload(ctx context.Context) (out *eth.ExecutionPa
 
 	if eq.buildingSafe {
 		eq.safeHead = ref
+		eq.finalized = ref
 		eq.postProcessSafeL2()
 		eq.metrics.RecordL2Ref("l2_safe", ref)
 	}
