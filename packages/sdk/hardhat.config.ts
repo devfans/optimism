@@ -6,6 +6,9 @@ import '@nomiclabs/hardhat-waffle'
 import 'hardhat-deploy'
 
 import './tasks'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const config: HardhatUserConfig = {
   solidity: {
